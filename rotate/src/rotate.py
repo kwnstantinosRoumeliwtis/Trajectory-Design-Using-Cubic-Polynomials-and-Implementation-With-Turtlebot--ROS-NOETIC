@@ -16,11 +16,26 @@ theta=0.0
 flag=0
 start=0.0
 end=0.0
+k=0
 lx=0
 ly=0
+st=0
+lt=0
+et=0
+time1=[]
 xo=[]
 yo=[]
+posx1=[]
+posy1=[]
+posx2=[]
+posy2=[]
+fullx=[]
+fully=[]
 vel=[]
+vel1=[]
+vel2=[]
+veld=[]
+
 
 
 def nOdometry(msg):
@@ -47,10 +62,6 @@ def calc_ai(dt,dist):
 	a2=(3.0/(dt**2))*(dist)
 	a3=-(2.0/(dt**3))*(dist)
 	return a2,a3
-
-
-
-
 	
 def fix_final_angle(rate,pub,move):
 	print("wait for final angle...")
@@ -72,24 +83,17 @@ move=Twist()
 r=rospy.Rate(1000)
 goal1=Point()
 goal2=Point()
-
 goal1.x=16.0
 goal1.y=8.0 
 goal2.x=16.0
 goal2.y=-8.0
-
 dt1=130.0
 dt2=130.0
 xfaa2,xfaa3=calc_ai(dt1,0.0)
 yfaa2,yfaa3=calc_ai(dt1,-16.0)
 xa2,xa3=calc_ai(dt1,16.0)
 ya2,ya3=calc_ai(dt1,8.0)
-k=0
-time1=[]
-st=0
-lt=0
-et=0
-st=0
+
 while not rospy.is_shutdown() : 
 	if flag==0:
 		if(et-st==0):
@@ -107,8 +111,7 @@ while not rospy.is_shutdown() :
 		move.linear.y=ya2*2.0*i+3.0*ya3*i**2
 		xo.append(x)
 		yo.append(y)		
-		if i>0 :
-	
+		if i>0 :	
 			move.angular.z=((angle-theta)/i)
 		print(x,y,i,math.sqrt(move.linear.x**2+move.linear.y**2))	
 		i=i+0.001
@@ -117,14 +120,10 @@ while not rospy.is_shutdown() :
 			delay()		
 			flag=1
 			o=i
-			i=0.0
-	
-									
-	else:   
-               
+			i=0.0										
+	else:                
 		if k==0:
-			et=0
-			
+			et=0			
 			xfa2,xfa3=calc_ai(dt2,16.0)
 			yfa2,yfa3=calc_ai(dt2,0.0)
 			k=1
@@ -142,11 +141,8 @@ while not rospy.is_shutdown() :
 		move.linear.y=yfa2*2.0*i+3.0*yfa3*i**2
 		xo.append(x)
 		yo.append(y)
-		print(x,y,i,math.sqrt(move.linear.x**2+move.linear.y**2))
-		
-			
-		if i>0:
-			
+		print(x,y,i,math.sqrt(move.linear.x**2+move.linear.y**2))			
+		if i>0:			
 			move.angular.z=((angle-theta)/i)
 		time1.append(o)	
 		i=i+0.001
@@ -163,18 +159,13 @@ while not rospy.is_shutdown() :
 	et=time.time()
 	epx=x
 	epy=y
+	
 fix_final_angle(r,pub,move)
 print("3 seconds more...")
 delay()	
 print(theta)
 print("one moment for graphs...")
 
-posx1=[]
-posy1=[]
-posx2=[]
-posy2=[]
-fullx=[]
-fully=[]
 for i in range(130000):
   posx1.append(xa2*time1[i]**2+xa3*time1[i]**3)
   posy1.append(ya2*time1[i]**2+ya3*time1[i]**3)
@@ -199,7 +190,6 @@ ax2.set_ylabel('positions x&y')
 
 fig.suptitle('x:blue line     y:red line', fontsize=10)
 
-
 fig, (ax3, ax4) = plt.subplots(1, 2, constrained_layout=True, sharey=True)
 ax3.plot(xo,yo,'k',label="real route")
 ax3.set_title(' real route',fontsize=20)
@@ -211,12 +201,9 @@ ax4.set_title('desired route',fontsize=20)
 ax4.set_xlabel('x position')
 ax4.set_ylabel('y position')
 
-
-vel1=[]
-vel2=[]
-veld=[]
 xfaa2,xfaa3=calc_ai(dt1,16.0)
 yfaa2,yfaa3=calc_ai(dt1,0.0)
+
 i=0
 while i<130:
 	x1=xa2*2.0*i+3.0*xa3*i**2
@@ -226,7 +213,6 @@ while i<130:
 	vel1.append(math.sqrt(x1**2+y1**2))
 	vel2.append(math.sqrt(x2**2+y2**2))
 	i+=0.001
-
 	
 veld=vel1+vel2 
 
@@ -240,7 +226,6 @@ ax6.plot(time1,veld,'k',label="desired velocity")
 ax6.set_title('desired velocity',fontsize=20)
 ax6.set_xlabel('time (s)')
 ax6.set_ylabel('velocity')
-
 
 plt.show()	
 
